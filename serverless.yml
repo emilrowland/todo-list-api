@@ -1,0 +1,80 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: todo-list
+app: todo-list
+tenant: emilrowland
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  region: eu-north-1
+
+functions:
+  create-task:
+    handler: task.create
+    events:
+      - http:
+          path: task/create
+          method: post
+          cors: true
+  update-task:
+    handler: task.update
+    events:
+      - http:
+          path: task/update
+          method: post
+          cors: true
+  list-tasks:
+    handler: task.list
+    events:
+      - http:
+          path: task/list
+          method: get
+          cors: true
+
+resources:  # CloudFormation template syntax
+  Resources:
+    usersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: todo-list-task-table
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: taskId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: taskId
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    DynamoDBIamPolicy:
+      Type: AWS::IAM::Policy
+      DependsOn: usersTable
+      Properties:
+        PolicyName: lambda-todo-list-dynamodb
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:Query
+              Resource: arn:aws:dynamodb:*:*:table/todo-list-task-table
+        Roles:
+          - Ref: IamRoleLambdaExecution
