@@ -27,8 +27,8 @@ const create = (event, context, callback) => {
       taskId: data.taskId,
       taskLabel: data.taskLabel,
       dueDate: data.dueDate,
-      completed: false,
       completedDate: null,
+      notCompleted: 'true',
       tags: data.tags
     },
     ConditionExpression: 'attribute_not_exists(userId) AND attribute_not_exists(taskId)',
@@ -83,9 +83,9 @@ const update = (event, context, callback) => {
       taskId: data.taskId,
       taskLabel: data.taskLabel,
       dueDate: data.dueDate,
-      completed: data.completed,
       completedDate: data.completedDate,
-      tags: data.tags
+      tags: data.tags,
+      notCompleted: data.notCompleted,
     },
     ConditionExpression: 'attribute_exists(userId) AND attribute_exists(taskId)',
   };
@@ -123,20 +123,15 @@ const update = (event, context, callback) => {
 const list = (event, context, callback) => {
   const params = {
     TableName: 'todo-list-task-table',
+    IndexName: 'userId-notCompleted-index',
     KeyConditionExpression: 'userId = :userid',
-    FilterExpression: '#c = :false',
-    ExpressionAttributeNames: {
-      '#c': 'completed'
-    },
     ExpressionAttributeValues: {
       ':userid': event.queryStringParameters['userId'],
-      ':false': false
     },
     ProjectionExpression: [
       'taskId',
       'taskLabel',
       'dueDate',
-      'completed',
       'completedDate',
       'tags'
     ]

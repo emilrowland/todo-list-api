@@ -54,6 +54,8 @@ resources:  # CloudFormation template syntax
             AttributeType: S
           - AttributeName: taskId
             AttributeType: S
+          - AttributeName: notCompleted
+            AttributeType: S
         KeySchema:
           - AttributeName: userId
             KeyType: HASH
@@ -62,6 +64,18 @@ resources:  # CloudFormation template syntax
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+        GlobalSecondaryIndexes:
+          - IndexName: userId-notCompleted-index
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+              - AttributeName: notCompleted
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
     DynamoDBIamPolicy:
       Type: AWS::IAM::Policy
       DependsOn: usersTable
@@ -75,6 +89,8 @@ resources:  # CloudFormation template syntax
                 - dynamodb:GetItem
                 - dynamodb:PutItem
                 - dynamodb:Query
-              Resource: arn:aws:dynamodb:*:*:table/todo-list-task-table
+              Resource:
+                - arn:aws:dynamodb:*:*:table/todo-list-task-table
+                - arn:aws:dynamodb:*:*:table/todo-list-task-table/index/*
         Roles:
           - Ref: IamRoleLambdaExecution
